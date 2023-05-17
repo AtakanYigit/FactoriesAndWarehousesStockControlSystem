@@ -24,6 +24,7 @@ namespace Midterm.Project.Visual.Programming
         {
             string connectionString = "Data Source = PURJAXX; Initial Catalog = StockControlSystem; Integrated Security = true";
             SqlConnection connection = new SqlConnection(connectionString);
+            requestsTable.Rows.Clear();
             connection.Open();
             DataTable dtRequests = new DataTable();
             if (connection.State == ConnectionState.Open){
@@ -92,26 +93,47 @@ namespace Midterm.Project.Visual.Programming
             connection.Open();
 
             DataTable dtStock = new DataTable();
-            if (connection.State == ConnectionState.Open){
+            if (connection.State == ConnectionState.Open)
+            {
                 SqlDataAdapter adapterRequests = new SqlDataAdapter("SELECT * FROM STOCK WHERE PRODUCT_ID = " + productID.Text.Substring(0, productID.Text.IndexOf("-")) + " AND WAREHOUSE_ID = " + Regex.Replace(destinationWarehouse.Text.ToString().Trim(), "[^0-9.]", ""), connection);
                 adapterRequests.Fill(dtStock);
             }
 
-            if (dtStock.Rows.Count > 0){
-                string sqlQuery = "UPDATE STOCK SET QUANTITY = QUANTITY + @newStock WHERE PRODUCT_ID = @productId AND WAREHOUSE_ID = @warehouseId";
-                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+            if (dtStock.Rows.Count > 0)
+            {
+                string sqlQuerySupply = "UPDATE STOCK SET QUANTITY = QUANTITY + @newStock WHERE PRODUCT_ID = @productId AND WAREHOUSE_ID = @warehouseId";
+                using (SqlCommand command = new SqlCommand(sqlQuerySupply, connection))
                 {
                     command.Parameters.AddWithValue("@newStock", numNewStock.Value);
                     command.Parameters.AddWithValue("@productId", Int32.Parse(productID.Text.Substring(0, productID.Text.IndexOf("-"))));
                     command.Parameters.AddWithValue("@warehouseId", Int32.Parse(destinationWarehouse.Text.Substring(0, destinationWarehouse.Text.IndexOf("-"))));
                     int rowsAffected = command.ExecuteNonQuery();
-                    System.Diagnostics.Debug.WriteLine(sqlQuery);
+                    System.Diagnostics.Debug.WriteLine(sqlQuerySupply);
                 }
             }
             else
             {
-
+                string sqlQuerySupply = "INSERT INTO STOCK (PRODUCT_ID, WAREHOUSE_ID, QUANTITY) VALUES (@productId, @warehouseId, @newStock) ON DUPLICATE KEY UPDATE QUANTITY = QUANTITY + @newStock;";
+                using (SqlCommand command = new SqlCommand(sqlQuerySupply, connection))
+                {
+                    command.Parameters.AddWithValue("@newStock", numNewStock.Value);
+                    command.Parameters.AddWithValue("@productId", Int32.Parse(productID.Text.Substring(0, productID.Text.IndexOf("-"))));
+                    command.Parameters.AddWithValue("@warehouseId", Int32.Parse(destinationWarehouse.Text.Substring(0, destinationWarehouse.Text.IndexOf("-"))));
+                    int rowsAffected = command.ExecuteNonQuery();
+                    System.Diagnostics.Debug.WriteLine(sqlQuerySupply);
+                }
             }
+
+            string sqlQueryRequest = "UPDATE REQUEST SET RECIEVE_DATE = @arrivalDate WHERE ID = @requestId";
+            using (SqlCommand command = new SqlCommand(sqlQueryRequest, connection))
+            {
+                command.Parameters.AddWithValue("@requestId", requestId.Value);
+                command.Parameters.AddWithValue("@arrivalDate", arrivalDate.SelectionRange.Start.ToString("yyyy-MM-dd"));
+                int rowsAffected = command.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine(sqlQueryRequest);
+            }
+
+            GetRequests();
             connection.Close();
         }
     }
