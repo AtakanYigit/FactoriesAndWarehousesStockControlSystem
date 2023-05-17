@@ -110,6 +110,7 @@ namespace Midterm.Project.Visual.Programming
             string connectionString = "Data Source = PURJAXX; Initial Catalog = StockControlSystem; Integrated Security = true";
             SqlConnection connection = new SqlConnection(connectionString);
             connection.Open();
+
             SqlDataAdapter adapter = new SqlDataAdapter("INSERT INTO REQUEST (CUSTOMER_FACTORY_ID, " +
                                                                              "MANUFACTURER_ID, "     +
                                                                              "WAREHOUSE_ID, "        +
@@ -121,10 +122,10 @@ namespace Midterm.Project.Visual.Programming
                                                         "VALUES (1, '"           + 
                                                                   Regex.Replace(requestedManufacturer.Text.ToString().Trim(), "[^0-9.]", "") + "', '" + 
                                                                   Regex.Replace(destinationWarehouse.Text.ToString().Trim(), "[^0-9.]", "")  + "', '" +
-                                                                  Regex.Replace(requestedProduct.Text.ToString().Trim(), "[^0-9.]", "")      + "', '" +
+                                                                  requestedProduct.Text.Split('-')[0].Trim()                                 + "', '" +
                                                                   requestedNumber.Text                                                       + "', '" +
-                                                                  DateTime.Now.ToString("dd-MM-yyyy")                                        + "', '" +
-                                                                  requestedDate.Text                                                         + "', '" +
+                                                                  DateTime.Now.ToString("yyyy-MM-dd")                                        + "', '" +
+                                                                  requestedDate.SelectionRange.Start.ToString("yyyy-MM-dd")                  + "', '" +
                                                                   "waiting');", connectionString);
             DataTable dataTable = new DataTable();
             adapter.Fill(dataTable);
